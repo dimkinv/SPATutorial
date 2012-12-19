@@ -7,14 +7,27 @@
  */
 (function ($) {
     infuser.defaults.templateUrl = "templates";
-    console.log('just febore pageinit');
+    console.log('just before pageinit');
     $(document).bind('pagecreate', function(){
+        // disable autoInit so we can navigate to bookmarked hash url
         $.mobile.autoInitializePage = false;
+
+        // let PathJS handle navigation
         $.mobile.ajaxEnabled = false;
-        $.mobile.linkBindingEnabled = false;
         $.mobile.hashListeningEnabled = false;
         $.mobile.pushStateEnabled = false;
-        console.log("entered mobileinit");
+    });
+
+    $(document).bind('pagebeforechange', function(e, data) {
+        var to = data.toPage;
+        if (typeof to === 'string') {
+            var u = $.mobile.path.parseUrl(to);
+            to = u.hash || '#' + u.pathname;
+            // manually set hash so PathJS will be triggered
+            location.hash = to;
+            // prevent JQM from handling navigation
+            e.preventDefault();
+        }
     });
 
     var Model = function () {
@@ -23,35 +36,68 @@
         this.state = ko.observable('items');
 
         this.goToItemDetails = function (item) {
-            location = location + '#/details/' + item.id;
+            location.hash = '/details/' + item.id;
         };
     };
     window.currentModel = new Model();
     ko.applyBindings(window.currentModel);
 
-    var app = $.sammy(function () {
-        this.get('#/', function (context) {
-            this.load('data/items.json').then(function (items) {
-                $.each(items, function (i, item) {
-                    context.log(item.title, '-', item.artist);
-                });
-                currentModel.state(window.templates.items);
-                currentModel.items(items);
-            })
-        });
-        this.get('#/details/:id', function (context) {
-            var con = context;
-            $(currentModel.items()).each(function (index, item, context) {
-                console.log(con);
-                if (item.id.toString()== con.params.id){
-                    currentModel.chosenItemData(item);
-                    currentModel.state(window.templates.itemDetail);
-                }
-            });
+    Path.map('#home').to(function(){
+        currentModel.state(window.templates.items);
+        currentModel.items(window.dummyData);
+    });
+    Path.map('#home/details/:id').to(function(){
+        var self = this;
+        $(currentModel.items()).each(function (index, item) {
+            if (item.id.toString()== self.params['id']){
+                currentModel.chosenItemData(item);
+                currentModel.state(window.templates.itemDetail);
+            }
         });
     });
 
+    Path.root('#home');
+
     $(function () {
-        app.run('#/');
+        Path.listen();
     })
 })(jQuery);
+
+window.dummyData = [
+    {
+        "id":1,
+        "title":"The Door",
+        "artist":"Religious Knives",
+        "image":"http://ecx.images-amazon.com/images/I/51og8BkN8jL._SS250_.jpg",
+        "large_image":"http://ecx.images-amazon.com/images/I/51og8BkN8jL._SS500_.jpg",
+        "price":9.98,
+        "url":"http://www.amazon.com/Door-Religious-Knives/dp/B001FGW0UQ/?tag=quirkey-20"
+    },
+    {
+        "id":2,
+        "title":"Album",
+        "artist":"Girls",
+        "image":"http://ecx.images-amazon.com/images/I/51hDxOeIeML._SS250_.jpg",
+        "large_image":"http://ecx.images-amazon.com/images/I/51hDxOeIeML._SS500_.jpg",
+        "price":13.98,
+        "url":"http://www.amazon.com/gp/product/B002GNOMJE?ie=UTF8&tag=quirkeycom-20&linkCode=as2&camp=1789&creative=390957&creativeASIN=B002GNOMJE"
+    },
+    {
+        "id":3,
+        "title":"Bitte Orca",
+        "artist":"The Dirty Projectors",
+        "image":"http://z2-ec2.images-amazon.com/images/P/B0026T4RTI.01._SS250_.jpg",
+        "large_image":"http://z2-ec2.images-amazon.com/images/P/B0026T4RTI.01._SS500_.jpg",
+        "price":13.98,
+        "url":"http://www.amazon.com/Bitte-Orca-Dirty-Projectors/dp/B0026T4RTI/ref=pd_sim_m_12?tag=quirkey-20"
+    },
+    {
+        "id":4,
+        "title":"The Pains of Being Pure at Heart",
+        "artist":"The Pains of Being Pure at Heart",
+        "image":"http://z2-ec2.images-amazon.com/images/P/B001LGXIDS.01._SS250_.jpg",
+        "large_image":"http://z2-ec2.images-amazon.com/images/P/B001LGXIDS.01._SS500_.jpg",
+        "price":13.99,
+        "url":"http://www.amazon.com/Pains-Being-Pure-Heart/dp/B001LGXIDS/ref=pd_sim_m_44?tag=quirkey-20"
+    }
+];
