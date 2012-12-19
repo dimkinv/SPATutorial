@@ -1,0 +1,6 @@
+<div data-bind="foreach: $root.items">
+    <h3 data-bind="text: title"></h3>
+    <span data-bind="text: artist"></span><br/>
+    $<span data-bind="text: price"></span><br/>
+    <a href="#" data-bind="click: $root.goToItemDetails">Details...</a>
+</div>
