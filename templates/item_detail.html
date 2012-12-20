@@ -1,4 +1,14 @@
 <div data-bind="with: chosenItemData">
-    <img src="" data-bind="attr: {src: image}" alt=""><br/>
-    <img src="" data-bind="attr: {src: large_image}" alt="">
+    <div data-role="collapsible-set"  id="itemsDesc">
+        <div data-role="collapsible">
+            <h3>Small</h3>
+
+            <p><img src="" data-bind="attr: {src: image}" alt=""></p>
+        </div>
+        <div data-role="collapsible">
+            <h3>Large</h3>
+
+            <p><img src="" data-bind="attr: {src: large_image}" alt=""></p>
+        </div>
+    </div>
 </div>

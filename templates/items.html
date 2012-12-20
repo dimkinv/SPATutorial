@@ -1,6 +1,9 @@
-<div data-bind="foreach: $root.items">
-    <h3 data-bind="text: title"></h3>
-    <span data-bind="text: artist"></span><br/>
-    $<span data-bind="text: price"></span><br/>
-    <a href="#" data-bind="click: $root.goToItemDetails">Details...</a>
-</div>
+<ul data-role="listview" data-theme="d" data-divider-theme="d" id="itemsList" data-bind="foreach: $root.items">
+    <li>
+        <a href="#" data-bind="click: $root.goToItemDetails">
+            <h3 data-bind="html: title"></h3>
+            <p data-bind="html: artist"></p>
+            <p >$<span data-bind="html: price"></span></p>
+        </a>
+    </li>
+</ul>

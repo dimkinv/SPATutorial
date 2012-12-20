@@ -7,49 +7,40 @@
  */
 (function ($) {
     infuser.defaults.templateUrl = "templates";
-    console.log('just before pageinit');
-    $(document).bind('pagecreate', function(){
-        // disable autoInit so we can navigate to bookmarked hash url
-        $.mobile.autoInitializePage = false;
-
-        // let PathJS handle navigation
-        $.mobile.ajaxEnabled = false;
-        $.mobile.hashListeningEnabled = false;
-        $.mobile.pushStateEnabled = false;
-    });
-
-    $(document).bind('pagebeforechange', function(e, data) {
-        var to = data.toPage;
-        if (typeof to === 'string') {
-            var u = $.mobile.path.parseUrl(to);
-            to = u.hash || '#' + u.pathname;
-            // manually set hash so PathJS will be triggered
-            location.hash = to;
-            // prevent JQM from handling navigation
-            e.preventDefault();
-        }
-    });
 
     var Model = function () {
         this.items = ko.observable(null);
+        this.items.subscribe(function () {
+            console.log('listview refreshed');
+        });
+
         this.chosenItemData = ko.observable();
-        this.state = ko.observable('items');
+        this.state = ko.observable(window.templates.items);
 
         this.goToItemDetails = function (item) {
-            location.hash = '/details/' + item.id;
+            location.hash = 'home/details/' + item.id;
+        };
+
+        this.afterRenderTemplate = function (elements) {
+            switch (window.currentModel.state()) {
+                case window.templates.items:
+                    $('#itemsList').listview();
+                    break;
+                case window.templates.itemDetail:
+                    $('#itemsDesc').collapsibleset();
+                    break;
+            }
         };
     };
-    window.currentModel = new Model();
-    ko.applyBindings(window.currentModel);
 
-    Path.map('#home').to(function(){
+    Path.map('#home').to(function () {
         currentModel.state(window.templates.items);
         currentModel.items(window.dummyData);
     });
-    Path.map('#home/details/:id').to(function(){
+    Path.map('#home/details/:id').to(function () {
         var self = this;
         $(currentModel.items()).each(function (index, item) {
-            if (item.id.toString()== self.params['id']){
+            if (item.id.toString() == self.params['id']) {
                 currentModel.chosenItemData(item);
                 currentModel.state(window.templates.itemDetail);
             }
@@ -59,6 +50,8 @@
     Path.root('#home');
 
     $(function () {
+        window.currentModel = new Model();
+        ko.applyBindings(window.currentModel);
         Path.listen();
     })
 })(jQuery);
